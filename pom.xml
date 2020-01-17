@@ -209,18 +209,6 @@
             </exclusions>
         </dependency>
 
-        <dependency>
-            <groupId>com.aliyun</groupId>
-            <artifactId>aliyun-java-sdk-core</artifactId>
-            <version>3.7.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.aliyun</groupId>
-            <artifactId>aliyun-java-sdk-ecs</artifactId>
-            <version>4.11.0</version>
-        </dependency>
-
-
     </dependencies>
 
     <build>
