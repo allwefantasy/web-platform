@@ -1,0 +1,74 @@
+mode:
+  development
+
+development:
+  datasources:
+    mysql:
+      host: 127.0.0.1
+      port: 3306
+      database: xxxxx
+      username: xxxxx
+      password: xxxxx
+      initialSize: 8
+      disable: false
+      removeAbandoned: true
+      testWhileIdle: true
+      removeAbandonedTimeout: 30
+      maxWait: 100
+      filters: stat,log4j
+    mongodb:
+      disable: true
+    redis:
+      disable: true
+test:
+  datasources:
+    mysql:
+      host: 127.0.0.1
+      port: 3306
+      database: xxxxx
+      username: xxxxx
+      password: xxxxx
+      disable: true
+
+production:
+  datasources:
+    mysql:
+      host: 127.0.0.1
+      port: 3306
+      database: xxxxx
+      username: xxxxx
+      password: xxxxx
+      disable: false
+
+
+application:
+  controller: xxxxxxxxxxxxxxx
+  model:      xxxx
+  test:       xxxx
+  static:
+    enable: true
+  template:
+    engine:
+      enable: true
+
+serviceframework:
+  template:
+    loader:
+      classpath:
+        enable: true
+  static:
+    loader:
+      classpath:
+        enable: true
+        dir: "streamingpro/assets"
+###############http config##################
+http:
+  port: 9002
+  disable: false
+  host: 0.0.0.0
+  server:
+    idleTimeout: 6000000
+  client:
+    accept:
+      timeout: 43200000
+

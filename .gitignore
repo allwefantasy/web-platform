@@ -1,0 +1,6 @@
+.idea/
+logs/
+target/
+.DS_Store
+dependency-reduced-pom.xml
+dev/docker/*.jar
