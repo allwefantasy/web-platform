@@ -2,6 +2,8 @@ package tech.mlsql.serviceframework.platform
 
 import java.net.{URL, URLClassLoader}
 
+import tech.mlsql.serviceframework.platform.app.StartupPhase
+
 /**
  * 20/1/2020 WilliamZhu(allwefantasy@gmail.com)
  */
@@ -9,7 +11,7 @@ trait Plugin {
   def entries: List[PluginItem]
 }
 
-case class PluginItem(name: String, clzzName: String, pluginType: String)
+case class PluginItem(name: String, clzzName: String, pluginType: String, phase: Option[StartupPhase] = None)
 
 object PluginType {
   val action = "action"
@@ -28,16 +30,16 @@ object PluginLoader {
     val pluginLoader = PluginLoader(loader, plugin)
     AppRuntimeStore.store.registerClzzLoader(pluginClassName, pluginLoader)
 
-    plugin.entries.foreach { action =>
-      action.pluginType match {
+    plugin.entries.foreach { item =>
+      item.pluginType match {
         case PluginType.action =>
-          AppRuntimeStore.store.registerAction(action.name, action.clzzName)
+          AppRuntimeStore.store.registerAction(item.name, item.clzzName)
         case PluginType.app =>
-          AppRuntimeStore.store.registerApp(action.name, action.clzzName)
+          AppRuntimeStore.store.registerApp(item.name, item.clzzName,item.phase)
         case PluginType.exception =>
-          AppRuntimeStore.store.registerExceptionRender(action.name, action.clzzName)
+          AppRuntimeStore.store.registerExceptionRender(item.name, item.clzzName)
         case PluginType.cleaner =>
-          AppRuntimeStore.store.registerRequestCleaner(action.name, action.clzzName)
+          AppRuntimeStore.store.registerRequestCleaner(item.name, item.clzzName)
       }
 
     }

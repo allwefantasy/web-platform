@@ -1,6 +1,7 @@
 package tech.mlsql.serviceframework.platform
 
 import com.fasterxml.jackson.annotation.JsonIgnore
+import tech.mlsql.serviceframework.platform.app.StartupPhase
 import tech.mlsql.serviceframework.platform.appstore.{InMemoryStore, KVIndex, KVStore}
 import tech.mlsql.serviceframework.platform.loader.ClzzLoaderRuntimeStore
 import tech.mlsql.serviceframework.platform.runtimestore.{ActionRuntimeStore, CustomAppRuntimeStore, ExceptionRenderRuntimeStore, RequestCleanerRuntimeStore}
@@ -28,7 +29,7 @@ case class ClzzLoaderItem(@KVIndex name: String, loader: PluginLoader) {
   def id = name
 }
 
-case class AppItem(name: String, className: String) {
+case class AppItem(name: String, className: String, phase: Option[StartupPhase]) {
   @JsonIgnore
   @KVIndex
   def id = name
