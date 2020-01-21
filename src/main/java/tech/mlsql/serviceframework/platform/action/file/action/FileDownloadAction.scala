@@ -1,11 +1,11 @@
-package tech.mlsql.serviceframework.platform.controller.file.action
+package tech.mlsql.serviceframework.platform.action.file.action
 
 import net.csdn.common.jline.ANSI.Renderer.RenderException
 import tech.mlsql.common.utils.Md5
 import tech.mlsql.common.utils.log.Logging
 import tech.mlsql.common.utils.path.PathFun
-import tech.mlsql.serviceframework.platform.controller.file.{DownloadRunner, FileServerDaemon}
-import tech.mlsql.serviceframework.platform.controller.{ActionContext, CustomAction, HttpContext}
+import tech.mlsql.serviceframework.platform.action.file.{DownloadRunner, FileServerDaemon}
+import tech.mlsql.serviceframework.platform.action.{ActionContext, CustomAction, HttpContext}
 
 /**
  * 19/1/2020 WilliamZhu(allwefantasy@gmail.com)
@@ -41,9 +41,9 @@ class FileDownloadAction extends CustomAction with Logging {
         }
       case "raw" =>
         restResponse.httpServletResponse().setContentType("application/octet-stream")
-        restResponse.httpServletResponse().addHeader("Content-Disposition", "attachment;filename=" + new String((filename + "." + param("file_suffix")).getBytes))
+        restResponse.httpServletResponse().addHeader("Content-Disposition", "attachment;filename=" + new String((filename + "." + params("file_suffix")).getBytes))
         restResponse.httpServletResponse().addHeader("Transfer-Encoding", "chunked")
-        DownloadRunner.getHDFSRawFileByPath(restResponse.httpServletResponse(), params("paths"), paramAsLong("pos", 0)) match {
+        DownloadRunner.getHDFSRawFileByPath(restResponse.httpServletResponse(), params("paths"), params.getOrElse("pos", "0").toLong) match {
           case 200 => render(restResponse, "success")
           case 400 => render(restResponse, 400, "download fail")
           case 500 => render(restResponse, 500, "server error")

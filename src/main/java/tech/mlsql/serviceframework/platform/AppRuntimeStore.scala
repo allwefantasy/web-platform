@@ -2,14 +2,13 @@ package tech.mlsql.serviceframework.platform
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import tech.mlsql.serviceframework.platform.appstore.{InMemoryStore, KVIndex, KVStore}
-import tech.mlsql.serviceframework.platform.runtimestore.{ControllerRuntimeStore, ExceptionRenderRuntimeStore, RequestCleanerRuntimeStore}
+import tech.mlsql.serviceframework.platform.loader.ClzzLoaderRuntimeStore
+import tech.mlsql.serviceframework.platform.runtimestore.{ActionRuntimeStore, CustomAppRuntimeStore, ExceptionRenderRuntimeStore, RequestCleanerRuntimeStore}
 
-/**
- * 17/1/2020 WilliamZhu(allwefantasy@gmail.com)
- */
 class AppRuntimeStore(val store: KVStore, val listener: Option[AppSRuntimeListener] = None)
   extends ExceptionRenderRuntimeStore
-    with ControllerRuntimeStore with RequestCleanerRuntimeStore {
+    with ActionRuntimeStore with RequestCleanerRuntimeStore
+    with ClzzLoaderRuntimeStore with CustomAppRuntimeStore {
 
 }
 
@@ -22,6 +21,24 @@ object AppRuntimeStore {
 class AppSRuntimeListener {}
 
 case class CustomClassItem(@KVIndex name: String, className: String)
+
+case class ClzzLoaderItem(@KVIndex name: String, loader: PluginLoader) {
+  @JsonIgnore
+  @KVIndex
+  def id = name
+}
+
+case class AppItem(name: String, className: String) {
+  @JsonIgnore
+  @KVIndex
+  def id = name
+}
+
+case class ActionItem(name: String, className: String) {
+  @JsonIgnore
+  @KVIndex
+  def id = name
+}
 
 case class CustomClassItemWrapper(customClassItem: CustomClassItem) {
   @JsonIgnore

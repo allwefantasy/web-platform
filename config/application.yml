@@ -42,9 +42,7 @@ production:
 
 
 application:
-  controller: xxxxxxxxxxxxxxx
-  model:      xxxx
-  test:       xxxx
+  controller: tech.mlsql.serviceframework.platform.controller
   static:
     enable: true
   template:
@@ -63,7 +61,7 @@ serviceframework:
         dir: "streamingpro/assets"
 ###############http config##################
 http:
-  port: 9002
+  port: 9007
   disable: false
   host: 0.0.0.0
   server:

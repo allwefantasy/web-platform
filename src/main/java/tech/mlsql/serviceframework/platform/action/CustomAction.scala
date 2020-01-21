@@ -1,4 +1,4 @@
-package tech.mlsql.serviceframework.platform.controller
+package tech.mlsql.serviceframework.platform.action
 
 import net.csdn.common.exception.RenderFinish
 import net.csdn.modules.http.{RestRequest, RestResponse}

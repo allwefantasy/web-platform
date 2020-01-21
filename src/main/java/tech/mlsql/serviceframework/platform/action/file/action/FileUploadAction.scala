@@ -1,4 +1,4 @@
-package tech.mlsql.serviceframework.platform.controller.file.action
+package tech.mlsql.serviceframework.platform.action.file.action
 
 import java.io.File
 
@@ -8,8 +8,8 @@ import org.apache.commons.io.FileUtils
 import tech.mlsql.common.utils.Md5
 import tech.mlsql.common.utils.log.Logging
 import tech.mlsql.common.utils.path.PathFun
-import tech.mlsql.serviceframework.platform.controller.file.FileServerDaemon
-import tech.mlsql.serviceframework.platform.controller.{ActionContext, CustomAction, HttpContext}
+import tech.mlsql.serviceframework.platform.action.file.FileServerDaemon
+import tech.mlsql.serviceframework.platform.action.{ActionContext, CustomAction, HttpContext}
 
 import scala.collection.JavaConverters._
 
@@ -77,11 +77,12 @@ class FileUploadAction extends CustomAction with Logging {
           FileUtils.copyInputStreamToFile(fileContent, targetPath)
           fileContent.close()
       }
-      ""
     } catch {
       case e: Exception =>
         logInfo("upload fail ", e)
         render(response, 500, s"upload fail,check master log ${e.getMessage}")
+
     }
+    ""
   }
 }

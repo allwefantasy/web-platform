@@ -1,0 +1,4 @@
+
+        [console_scripts]
+        sfcli=tech.mlsql.serviceframework.scripts.scripts:main
+    

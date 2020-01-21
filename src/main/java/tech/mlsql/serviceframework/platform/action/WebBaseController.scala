@@ -1,9 +1,11 @@
-package tech.mlsql.serviceframework.platform.controller
+package tech.mlsql.serviceframework.platform.action
 
 import net.csdn.annotation.rest._
+import net.csdn.common.exception.RenderFinish
 import net.csdn.modules.http.ApplicationController
 import net.csdn.modules.http.RestRequest.Method.{GET, POST}
 import tech.mlsql.common.utils.log.Logging
+import tech.mlsql.common.utils.serder.json.JSONTool
 import tech.mlsql.serviceframework.platform.cleaner.RequestCleanerManager
 import tech.mlsql.serviceframework.platform.exception.ExceptionRenderManager
 
@@ -40,25 +42,28 @@ class WebBaseController extends ApplicationController with Logging {
       schema = new Schema(`type` = "string", format = """{}""", description = "")
     ))
   ))
-  @At(path = Array("/run/script"), types = Array(GET, POST))
-  def runScript = {
+  @At(path = Array("/run"), types = Array(GET, POST))
+  def run = {
+
+    ActionContext.setContext(new ActionContext(HttpContext(request, restResponse), params().asScala.toMap, Map(), false))
+
     var outputResult: String = "[]"
     try {
       params.getOrDefault("action", "default") match {
-        case "default" =>
+        case "default" => JSONTool.toJsonStr(Map("message" -> "Welcome to web-platform"))
         case action: String =>
           outputResult = ActionManager.call(action, params().asScala.toMap)
       }
+      if (!ActionContext.context().stop) {
+        render(outputResult)
+      }
 
     } catch {
-      case e: Exception =>
+      case e: Exception if !e.isInstanceOf[RenderFinish] =>
         val msg = ExceptionRenderManager.call(e)
         render(500, msg.str.get)
     } finally {
       RequestCleanerManager.call()
-    }
-    if (!ActionContext.context().stop) {
-      render(outputResult)
     }
 
   }

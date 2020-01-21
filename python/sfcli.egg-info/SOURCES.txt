@@ -1,0 +1,14 @@
+setup.py
+sfcli.egg-info/PKG-INFO
+sfcli.egg-info/SOURCES.txt
+sfcli.egg-info/dependency_links.txt
+sfcli.egg-info/entry_points.txt
+sfcli.egg-info/requires.txt
+sfcli.egg-info/top_level.txt
+tech/__init__.py
+tech/mlsql/__init__.py
+tech/mlsql/serviceframework/__init__.py
+tech/mlsql/serviceframework/version.py
+tech/mlsql/serviceframework/scripts/__init__.py
+tech/mlsql/serviceframework/scripts/scripts.py
+tech/mlsql/serviceframework/scripts/shellutils.py

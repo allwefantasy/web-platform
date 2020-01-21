@@ -1,4 +1,4 @@
-package tech.mlsql.serviceframework.platform.controller.file;
+package tech.mlsql.serviceframework.platform.action.file;
 
 import org.apache.hadoop.fs.FileStatus;
 import org.kamranzafar.jtar.TarEntry;
