@@ -18,6 +18,37 @@
         <hadoop-version>2.6.0</hadoop-version>
         <httpclient.version>4.5.3</httpclient.version>
     </properties>
+    <name>web-platform</name>
+    <url>https://github.com/allwefantasy/web-platform</url>
+    <description>
+        quick develop
+    </description>
+    <licenses>
+        <license>
+            <name>Apache 2.0 License</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <id>allwefantasy</id>
+            <name>ZhuHaiLin</name>
+            <email>allwefantasy@gmail.com</email>
+        </developer>
+    </developers>
+    <scm>
+        <connection>
+            scm:git:git@github.com:allwefantasy/web-platform.git
+        </connection>
+        <developerConnection>
+            scm:git:git@github.com:allwefantasy/web-platform.git
+        </developerConnection>
+        <url>https://github.com/allwefantasy/web-platform</url>
+    </scm>
+    <issueManagement>
+        <url>https://github.com/allwefantasy/web-platform/issues</url>
+    </issueManagement>
 
     <profiles>
         <profile>
@@ -344,5 +375,16 @@
             </plugin>
         </plugins>
     </build>
+    <distributionManagement>
+        <snapshotRepository>
+            <id>sonatype-nexus-snapshots</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>sonatype-nexus-staging</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/
+            </url>
+        </repository>
+    </distributionManagement>
 
 </project>
