@@ -21,7 +21,7 @@ object AppRuntimeStore {
 
 class AppSRuntimeListener {}
 
-case class CustomClassItem(@KVIndex name: String, className: String)
+case class CustomClassItem(@KVIndex name: String, className: String, loader: PluginLoader)
 
 case class ClzzLoaderItem(@KVIndex name: String, loader: PluginLoader) {
   @JsonIgnore
@@ -29,13 +29,13 @@ case class ClzzLoaderItem(@KVIndex name: String, loader: PluginLoader) {
   def id = name
 }
 
-case class AppItem(name: String, className: String, phase: Option[StartupPhase]) {
+case class AppItem(name: String, className: String, loader: PluginLoader, phase: Option[StartupPhase]) {
   @JsonIgnore
   @KVIndex
   def id = name
 }
 
-case class ActionItem(name: String, className: String) {
+case class ActionItem(name: String, className: String, loader: PluginLoader) {
   @JsonIgnore
   @KVIndex
   def id = name

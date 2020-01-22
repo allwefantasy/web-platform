@@ -1,11 +1,11 @@
 package tech.mlsql.serviceframework.platform.runtimestore
 
-import tech.mlsql.serviceframework.platform.{AppRuntimeStore, CustomClassItem, ExceptionRenderItemWrapper}
+import tech.mlsql.serviceframework.platform.{AppRuntimeStore, CustomClassItem, ExceptionRenderItemWrapper, PluginLoader}
 
 trait ExceptionRenderRuntimeStore {
   self: AppRuntimeStore =>
-  def registerExceptionRender(name: String, className: String) = {
-    store.write(ExceptionRenderItemWrapper(CustomClassItem(name, className)))
+  def registerExceptionRender(name: String, className: String, loader: PluginLoader) = {
+    store.write(ExceptionRenderItemWrapper(CustomClassItem(name, className, loader: PluginLoader)))
   }
 
   def removeExceptionRender(name: String) = {

@@ -15,7 +15,7 @@ object ActionManager {
     AppRuntimeStore.store.getAction(action) match {
       case Some(item) =>
         val actionClassName = item.className
-        Class.forName(actionClassName, true, AppRuntimeStore.store.getLoader(action).loader.loader).
+        Class.forName(actionClassName, true, item.loader.loader).
           newInstance().asInstanceOf[CustomAction].run(params)
       case None => throw new RuntimeException(s"No action named ${action}")
     }

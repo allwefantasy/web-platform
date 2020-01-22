@@ -4,3 +4,6 @@ target/
 .DS_Store
 dependency-reduced-pom.xml
 dev/docker/*.jar
+python/.eggs/
+python/build/
+python/dist

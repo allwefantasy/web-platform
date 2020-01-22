@@ -1,14 +1,14 @@
 package tech.mlsql.serviceframework.platform.runtimestore
 
 import tech.mlsql.serviceframework.platform.app.StartupPhase
-import tech.mlsql.serviceframework.platform.{AppItem, AppRuntimeStore}
+import tech.mlsql.serviceframework.platform.{AppItem, AppRuntimeStore, PluginLoader}
 
 import scala.collection.JavaConverters._
 
 trait CustomAppRuntimeStore {
   self: AppRuntimeStore =>
-  def registerApp(name: String, className: String, phase: Option[StartupPhase]) = {
-    store.write(AppItem(name, className, phase))
+  def registerApp(name: String, className: String, loader: PluginLoader, phase: Option[StartupPhase]) = {
+    store.write(AppItem(name, className, loader, phase))
   }
 
   def removeApp(name: String) = {

@@ -1,13 +1,13 @@
 package tech.mlsql.serviceframework.platform.runtimestore
 
-import tech.mlsql.serviceframework.platform.{ActionItem, AppItem, AppRuntimeStore}
+import tech.mlsql.serviceframework.platform.{ActionItem, AppItem, AppRuntimeStore, PluginLoader}
 
 import scala.collection.JavaConverters._
 
 trait ActionRuntimeStore {
   self: AppRuntimeStore =>
-  def registerAction(name: String, className: String) = {
-    store.write(ActionItem(name, className))
+  def registerAction(name: String, className: String, loader: PluginLoader) = {
+    store.write(ActionItem(name, className, loader))
   }
 
   def removeAction(name: String) = {

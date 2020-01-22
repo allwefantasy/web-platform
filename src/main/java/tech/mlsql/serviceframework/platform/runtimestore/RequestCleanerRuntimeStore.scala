@@ -1,11 +1,11 @@
 package tech.mlsql.serviceframework.platform.runtimestore
 
-import tech.mlsql.serviceframework.platform.{AppRuntimeStore, CustomClassItem, RequestCleanerItemWrapper}
+import tech.mlsql.serviceframework.platform.{AppRuntimeStore, CustomClassItem, PluginLoader, RequestCleanerItemWrapper}
 
 trait RequestCleanerRuntimeStore {
   self: AppRuntimeStore =>
-  def registerRequestCleaner(name: String, className: String) = {
-    store.write(RequestCleanerItemWrapper(CustomClassItem(name, className)))
+  def registerRequestCleaner(name: String, className: String, loader: PluginLoader) = {
+    store.write(RequestCleanerItemWrapper(CustomClassItem(name, className, loader)))
   }
 
   def removeRequestCleaner(name: String) = {

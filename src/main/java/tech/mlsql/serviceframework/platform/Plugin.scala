@@ -1,8 +1,11 @@
 package tech.mlsql.serviceframework.platform
 
+import java.io.File
 import java.net.{URL, URLClassLoader}
 
 import tech.mlsql.serviceframework.platform.app.StartupPhase
+import tech.mlsql.serviceframework.platform.cleaner.ActionContextCleaner
+import tech.mlsql.serviceframework.platform.plugin.DefaultPlugin
 
 /**
  * 20/1/2020 WilliamZhu(allwefantasy@gmail.com)
@@ -24,7 +27,14 @@ case class PluginLoader(loader: ClassLoader, plugin: Plugin)
 
 object PluginLoader {
   def load(url: String, pluginClassName: String) = {
-    val loader = new URLClassLoader(Array(new URL(url)))
+    val path = if (url.toLowerCase().startsWith("http://")) {
+      new URL(url)
+    } else if (url.toLowerCase().startsWith("https://")) {
+      new URL(url)
+    } else {
+      new File(url).toURI.toURL
+    }
+    val loader = new URLClassLoader(Array(path))
     val plugin = loader.loadClass(pluginClassName).newInstance().asInstanceOf[Plugin]
 
     val pluginLoader = PluginLoader(loader, plugin)
@@ -33,16 +43,23 @@ object PluginLoader {
     plugin.entries.foreach { item =>
       item.pluginType match {
         case PluginType.action =>
-          AppRuntimeStore.store.registerAction(item.name, item.clzzName)
+          AppRuntimeStore.store.registerAction(item.name, item.clzzName, pluginLoader)
         case PluginType.app =>
-          AppRuntimeStore.store.registerApp(item.name, item.clzzName,item.phase)
+          AppRuntimeStore.store.registerApp(item.name, item.clzzName, pluginLoader, item.phase)
         case PluginType.exception =>
-          AppRuntimeStore.store.registerExceptionRender(item.name, item.clzzName)
+          AppRuntimeStore.store.registerExceptionRender(item.name, item.clzzName, pluginLoader)
         case PluginType.cleaner =>
-          AppRuntimeStore.store.registerRequestCleaner(item.name, item.clzzName)
+          AppRuntimeStore.store.registerRequestCleaner(item.name, item.clzzName, pluginLoader)
       }
 
     }
 
+    val defaultCleanerName = "ActionContextCleaner"
+    if (!AppRuntimeStore.store.getAction(defaultCleanerName).isDefined) {
+      val defaultPlugin = new DefaultPlugin()
+      AppRuntimeStore.store.registerRequestCleaner(defaultCleanerName, classOf[ActionContextCleaner].getName,
+        PluginLoader(Thread.currentThread().getContextClassLoader, defaultPlugin))
+    }
+    pluginLoader
   }
 }
