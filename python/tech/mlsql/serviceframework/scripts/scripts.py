@@ -84,7 +84,9 @@ def run(runtime, plugin_name, dev):
     build_class_path = os.path.join(".", "target", "classes")
     if dev:
         plugins = [app_runtime_jar]
-        app_runtime_jar = app_runtime_jar + ":" + build_class_path
+        run_cmd(["mvn", "dependency:copy-dependencies", "-DincludeScope=runtime",
+                 "-DoutputDirectory=./release/libs"])
+        app_runtime_jar = app_runtime_jar + ":" + "./release/libs/*" + ":" + build_class_path
     else:
         plugins = ["./release/{}".format(jarName) for jarName in os.listdir("release") if jarName.endswith(".jar")]
     try:
@@ -136,9 +138,10 @@ def run(runtime, plugin_name, dev):
     monitor_dir(build_class_path, handler)
 
     while True:
-        time.sleep(3)
+        time.sleep(1)
         if len(ProcessInfo.event_buffer) > 0:
             print("Restarting....")
+            time.sleep(3)
             ProcessInfo.event_buffer.clear()
             ProcessInfo.kill()
             count = 10
