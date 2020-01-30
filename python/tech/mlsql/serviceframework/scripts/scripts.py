@@ -2,12 +2,16 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import pathlib
+import shutil
 import subprocess
 import sys
 import time
 
 import click
+import requests
 
+from tech.mlsql.serviceframework.scripts import jarmanager, appruntime
 from tech.mlsql.serviceframework.scripts.process_info import ProcessInfo
 from tech.mlsql.serviceframework.scripts.processutils import *
 from tech.mlsql.serviceframework.scripts.shellutils import run_cmd
@@ -29,19 +33,59 @@ def cli():
     required=False,
     type=str,
     help="the name of project")
-def create(name):
+@click.option(
+    "--empty",
+    required=False,
+    help="is empty project")
+def create(name, empty):
+    scala_prefix = "2.11"
+
     command = ["git", "clone", "https://github.com/allwefantasy/baseweb"]
     run_cmd(command)
-
     run_cmd(["mv", "baseweb", name])
-    with open("./{}/pom.xml".format(name)) as f:
-        newlines = [line.replace("baseweb_2.11", name + "_2.11") for line in f.readlines()]
 
-    with open("./{}/pom.xml".format(name), "w") as f:
-        f.writelines(newlines)
+    run_cmd(["mv", os.path.join(name, "baseweb-bin"),
+             os.path.join(name, "{}-bin".format(name))])
+
+    run_cmd(["mv", os.path.join(name, "baseweb-lib"),
+             os.path.join(name, "{}-lib".format(name))])
+
+    if empty:
+        for item in [".git", "{}-bin".format(name), "{}-lib".format(name), "src"]:
+            shutil.rmtree(os.path.join(name, item))
+        for item in ["README.md", "pom.xml"]:
+            run_cmd(["rm", os.path.join(name, item)])
+        return
+
+    def change_pom(pom_path):
+        with open(pom_path) as f:
+            newlines = [line.replace("baseweb_" + scala_prefix, name + "_" + scala_prefix) for line in f.readlines()]
+            newlines = [line.replace("baseweb-bin", name + "-bin") for line in newlines]
+            newlines = [line.replace("baseweb-lib", name + "-lib") for line in newlines]
+
+        with open(pom_path, "w") as f:
+            f.writelines(newlines)
+
+    change_pom(os.path.join(".", "{}", "pom.xml").format(name))
+
+    change_pom(os.path.join(".", "{}", "{}-bin", "pom.xml").format(name, name))
+    change_pom(os.path.join(".", "{}", "{}-lib", "pom.xml").format(name, name))
 
     os.mkdir(os.path.join(".", name, ".sfcli"))
     os.mkdir(os.path.join(".", name, ".sfcli", "cache"))
+    with open(os.path.join(".", name, ".sfcli", "projectName"), "w") as f:
+        f.writelines([name])
+
+    shutil.rmtree(os.path.join(".", name, ".git"))
+
+    plugin_db_scala = "src/main/scala/tech/mlsql/app_runtime/example/PluginDB.scala".split("/")
+    plugin_db_scala_path = os.path.join(".", name, "{}-lib".format(name), *plugin_db_scala)
+    with open(plugin_db_scala_path) as f:
+        newlines = [item.replace('val plugin_name = "example"', 'val plugin_name = "{}"'.format(name)) for item in
+                    f.readlines()]
+    with open(plugin_db_scala_path, "w") as f:
+        f.writelines(newlines)
+
     print("done")
 
 
@@ -61,32 +105,45 @@ def create(name):
     required=False,
     type=bool,
     help="enable dev")
-def run(runtime, plugin_name, dev):
-    app_runtime_jar = ""
-    if "APP_RUNTIME_JAR" in os.environ:
-        app_runtime_jar = os.environ["APP_RUNTIME_JAR"]
+@click.option(
+    "--mvn",
+    required=False,
+    type=str,
+    help="mvn command")
+@click.option(
+    "--debug_port",
+    required=False,
+    type=int,
+    help="debug port")
+def run(runtime, plugin_name, dev, mvn, debug_port):
+    project_name = get_project_name()
 
-    if runtime is not None:
-        app_runtime_jar = runtime
+    if not mvn:
+        mvn = "./build/mvn"
 
-    if app_runtime_jar == "":
-        app_runtime_jar = "http://download.mlsql.tech/app-runtime-1.0.0/app-runtime_2.11-1.0.0.jar "
+    app_runtime_jar = jarmanager.get_app_jar_path(runtime)
 
-    cache_path = os.path.join(".sfcli", "cache", "app-runtime_2.11-1.0.0.jar")
+    cache_path = jarmanager.get_cache_path()
 
-    if not os.path.exists(cache_path) and app_runtime_jar.startswith("http://") or app_runtime_jar.startswith(
-            "https://"):
-        run_cmd(["wget", app_runtime_jar, "-O", cache_path])
+    jarmanager.cache_app_jar(app_runtime_jar)
 
     if os.path.exists(cache_path):
         app_runtime_jar = cache_path
 
-    build_class_path = os.path.join(".", "target", "classes")
+    lib_build_class_path = os.path.join(".", "{}-lib".format(project_name), "target", "classes")
+    bin_build_class_path = os.path.join(".", "{}-bin".format(project_name), "target", "classes")
+    # dependencies_output_path = os.path.join(".", "release", "libs")
     if dev:
+        run_cmd([mvn, "-DskipTests", "install", "-pl", "{}-lib".format(project_name), "-am"])
+        run_cmd([mvn, "-DskipTests", "compile", "-pl", "{}-bin".format(project_name)])
         plugins = [app_runtime_jar]
-        run_cmd(["mvn", "dependency:copy-dependencies", "-DincludeScope=runtime",
-                 "-DoutputDirectory=./release/libs"])
-        app_runtime_jar = app_runtime_jar + ":" + "./release/libs/*" + ":" + build_class_path
+        # run_cmd(["mvn", "dependency:copy-dependencies", "-DincludeScope=runtime",
+        #          "-DoutputDirectory={}".format(dependencies_output_path)], "-fn")
+        class_path_str_file = os.path.join(".sfcli", ".classpath")
+        run_cmd([mvn, "dependency:build-classpath", "-Dmdep.outputFile={}".format(class_path_str_file)])
+        with open(class_path_str_file, "r") as f:
+            class_path_str = f.readlines()[0].strip("\n")
+        app_runtime_jar = app_runtime_jar + ":" + class_path_str + ":" + lib_build_class_path + ":" + bin_build_class_path
     else:
         plugins = ["./release/{}".format(jarName) for jarName in os.listdir("release") if jarName.endswith(".jar")]
     try:
@@ -97,15 +154,19 @@ def run(runtime, plugin_name, dev):
         # Don't start the reaper in this case as it could result in killing
         # other user processes.
         return None
-    main_class = "tech.mlsql.serviceframework.platform.AppRuntime"
+    main_class = appruntime.get_app_runtime_main_class()
     if plugin_name is None:
-        args = "tech.mlsql.app_runtime.plugin.PluginDesc"
+        args = appruntime.get_plugin_main_class()
     else:
         args = plugin_name
 
     pluginPaths = ",".join(plugins)
     pluginNames = args
-    command = ["java", "-cp", ".:{}".format(app_runtime_jar), main_class,
+
+    debug_args = ""
+    if dev:
+        debug_args = "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address={}".format(str(debug_port))
+    command = ["java", debug_args, "-cp", ".:{}".format(app_runtime_jar), main_class,
                "-pluginPaths {} -pluginNames {}".format(pluginPaths, pluginNames)]
     print("start:{}".format(" ".join(command)))
 
@@ -135,7 +196,7 @@ def run(runtime, plugin_name, dev):
     def handler(event):
         ProcessInfo.event_buffer.append(event)
 
-    monitor_dir(build_class_path, handler)
+    monitor_dir(lib_build_class_path, handler)
 
     while True:
         time.sleep(1)
@@ -156,39 +217,175 @@ def run(runtime, plugin_name, dev):
 
 @cli.command()
 @click.option(
+    "--add",
+    required=False,
+    type=str,
+    help="jar path")
+@click.option(
+    "--remove",
+    required=False,
+    type=str,
+    help="jar path")
+@click.option(
+    "--instance_address",
+    required=False,
+    type=str,
+    help="the runtime url path,default http://127.0.0.1:9007")
+def plugin(add, remove, instance_address):
+    if not instance_address:
+        instance_address = "http://127.0.0.1:9007"
+
+    if add and remove:
+        raise Exception("--add and --remove should not specified at the same time")
+    if add:
+        execute_add_plugin(instance_address, add)
+    if remove:
+        pass
+
+
+def execute_add_plugin(instance_address, add):
+    res = requests.post("{}/run".format(instance_address),
+                        {"action": "registerPlugin", "url": add, "className": appruntime.get_plugin_main_class()})
+    if res.status_code != 200:
+        raise Exception("Plugin install fail:{} ".format(instance_address))
+    print(res.status_code)
+    print(res.text)
+
+
+@cli.command()
+@click.option(
+    "--runtime_path",
+    required=False,
+    type=str,
+    help="the path of app-runtime")
+def runtime(runtime_path):
+    try:
+        os.setpgrp()
+    except OSError as e:
+        eprint("setpgrp failed, processes may not be "
+               "cleaned up properly: {}.".format(e))
+        # Don't start the reaper in this case as it could result in killing
+        # other user processes.
+        return None
+    main_class = appruntime.get_app_runtime_main_class()
+    app_runtime_jar = jarmanager.get_app_jar_path(runtime_path)
+    command = ["java", "-cp", ".:{}".format(app_runtime_jar), main_class]
+    print("start:{}".format(" ".join(command)))
+
+    def block_sigint():
+        import signal
+        signal.pthread_sigmask(signal.SIG_BLOCK, {signal.SIGINT})
+
+    modified_env = os.environ.copy()
+    cwd = None
+
+    # stdout_file, stderr_file = new_log_files("sfcli-logs")
+    pipe_stdin = False
+
+    def start_process():
+        wow = subprocess.Popen(
+            command,
+            env=modified_env,
+            cwd=cwd,
+            stdout=sys.stdout,
+            stderr=sys.stderr,
+            stdin=subprocess.PIPE if pipe_stdin else None,
+            preexec_fn=block_sigint)
+        return wow
+
+    ProcessInfo.inner_process = start_process()
+
+    while True:
+        time.sleep(5)
+
+    ProcessInfo.kill()
+
+
+@cli.command()
+@click.option(
     "--dev",
     required=False,
     type=bool,
     help="enable dev")
-def compile(dev):
+@click.option(
+    "--mvn",
+    required=False,
+    type=str,
+    help="mvn command")
+@click.option(
+    "--pl",
+    required=False,
+    type=str,
+    help="module name")
+def compile(dev, mvn, pl):
+    if not mvn:
+        mvn = "./build/mvn"
+    project_name = get_project_name()
+    # run_cmd("mvn", "-DskipTests", "clean", "install")
+
+    if not pl:
+        pl = "{}-lib".format(project_name)
+
+    if pl:
+        os.chdir(os.path.join(".", pl))
+        mvn = mvn.replace(".", "..")
     if dev:
         print("=======================")
         print("incremental compile... ")
         print("Using Ctrl+C to stop")
         print("=======================")
-        run_cmd(["mvn", "scala:cc"])
+        run_cmd([mvn, "clean", "scala:cc", "-Dfsc=false"])
     else:
-        run_cmd(["mvn", "clean", "compile"])
+        run_cmd([mvn, "clean", "compile"])
 
 
 @cli.command()
-def release():
-    run_cmd(["mvn", "-DskipTests", "clean", "package", "-Pshade"])
-    if not os.path.exists("release"):
-        os.mkdir("release")
-    files = [file for file in os.listdir("target") if
+@click.option(
+    "--mvn",
+    required=False,
+    type=str,
+    help="mvn command")
+@click.option(
+    "--install",
+    required=False,
+    type=str,
+    help="install bin or lib ")
+def release(mvn, install):
+    project_name = get_project_name()
+    if not mvn:
+        mvn = "./build/mvn"
+
+    if install:
+        install_module = "{}-{}".format(project_name, install)
+        command = [mvn, "-DskipTests", "clean", "install", "-pl", install_module, "-am"]
+        run_cmd(command)
+        print("execute: {}".format(" ".join(command)))
+        return
+
+    bin_project = "{}-bin".format(project_name)
+    command = [mvn, "-DskipTests", "clean", "package", "-Pshade", "-pl", bin_project, "-am"]
+    print("execute: {}".format(" ".join(command)))
+    run_cmd(command)
+    if os.path.exists("release"):
+        shutil.rmtree("release")
+    os.mkdir("release")
+
+    files = [file for file in os.listdir(os.path.join(bin_project, "target")) if
              file.endswith(".jar")
              and not file.endswith("-sources.jar")
-             and not file.startswith("original-")]
+             and not file.startswith("original-")
+             and not file.endswith("-javadoc.jar")]
     for file in files:
-        run_cmd(["cp", "-r", "target/{}".format(file), "release"])
-    print("done")
+        run_cmd(["cp", "-r", "{}/target/{}".format(bin_project, file), "release"])
+    full_path = pathlib.Path().absolute()
+    print("{}/release/{}".format(full_path, file))
 
 
 cli.add_command(create)
 cli.add_command(compile)
 cli.add_command(release)
 cli.add_command(run)
+cli.add_command(plugin)
 
 
 def main():

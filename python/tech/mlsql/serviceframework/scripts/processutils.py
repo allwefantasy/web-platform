@@ -7,6 +7,12 @@ import tempfile
 from watchdog.events import FileSystemEventHandler
 
 
+def get_project_name():
+    with open(os.path.join(".", ".sfcli", "projectName"), "r") as f:
+        projectName = f.readlines()[0].strip("\n")
+    return projectName
+
+
 def _get_unused_port():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind(("", 0))
