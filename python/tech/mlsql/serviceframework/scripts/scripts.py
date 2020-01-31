@@ -231,23 +231,27 @@ def run(runtime, plugin_name, dev, mvn, debug_port):
     required=False,
     type=str,
     help="the runtime url path,default http://127.0.0.1:9007")
-def plugin(add, remove, instance_address):
+@click.option(
+    "--token",
+    required=False,
+    type=str,
+    help="admin token")
+def plugin(add, remove, instance_address, token):
     if not instance_address:
         instance_address = "http://127.0.0.1:9007"
 
     if add and remove:
         raise Exception("--add and --remove should not specified at the same time")
     if add:
-        execute_add_plugin(instance_address, add)
+        execute_add_plugin(instance_address, add, token)
     if remove:
         pass
 
 
-def execute_add_plugin(instance_address, add):
+def execute_add_plugin(instance_address, add, token):
     res = requests.post("{}/run".format(instance_address),
-                        {"action": "registerPlugin", "url": add, "className": appruntime.get_plugin_main_class()})
-    if res.status_code != 200:
-        raise Exception("Plugin install fail:{} ".format(instance_address))
+                        {"action": "registerPlugin", "url": add, "admin_token": token,
+                         "className": appruntime.get_plugin_main_class()})
     print(res.status_code)
     print(res.text)
 
@@ -416,6 +420,7 @@ cli.add_command(compile)
 cli.add_command(release)
 cli.add_command(run)
 cli.add_command(plugin)
+cli.add_command(runtime)
 
 
 def main():
