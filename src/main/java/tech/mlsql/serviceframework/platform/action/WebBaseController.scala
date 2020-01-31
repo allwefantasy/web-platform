@@ -35,10 +35,11 @@ class WebBaseController extends ApplicationController with Logging {
 
     var outputResult: String = "[]"
     try {
-      params.getOrDefault("action", "default") match {
-        case "default" => JSONTool.toJsonStr(Map("message" -> "Welcome to web-platform"))
+      ActionContext.context().params.getOrElse("action", "default") match {
+        case "default" =>
+          outputResult = JSONTool.toJsonStr(Map("message" -> "Welcome to web-platform"))
         case action: String =>
-          outputResult = ActionManager.call(action, params().asScala.toMap)
+          outputResult = ActionManager.call(action, ActionContext.context().params)
       }
       if (!ActionContext.context().stop) {
         render(outputResult)
