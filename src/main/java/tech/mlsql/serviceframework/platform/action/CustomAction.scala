@@ -43,6 +43,11 @@ object ActionContext {
     c
   }
 
+  object Config {
+    val servletFileUpload = "servletFileUpload"
+    val formItems = "formItems"
+  }
+
 }
 
 case class ActionContext(httpContext: HttpContext,

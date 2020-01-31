@@ -143,7 +143,7 @@ def run(runtime, plugin_name, dev, mvn, debug_port):
         run_cmd([mvn, "dependency:build-classpath", "-Dmdep.outputFile={}".format(class_path_str_file)])
         with open(class_path_str_file, "r") as f:
             class_path_str = f.readlines()[0].strip("\n")
-        app_runtime_jar = app_runtime_jar + ":" + class_path_str + ":" + lib_build_class_path + ":" + bin_build_class_path
+        app_runtime_jar = app_runtime_jar + ":" + class_path_str + ":" + lib_build_class_path
     else:
         plugins = ["./release/{}".format(jarName) for jarName in os.listdir("release") if jarName.endswith(".jar")]
     try:
@@ -167,7 +167,7 @@ def run(runtime, plugin_name, dev, mvn, debug_port):
     if dev:
         debug_args = "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address={}".format(str(debug_port))
     command = ["java", debug_args, "-cp", ".:{}".format(app_runtime_jar), main_class,
-               "-pluginPaths {} -pluginNames {}".format(pluginPaths, pluginNames)]
+               "-pluginPaths {} -pluginNames {}".format(bin_build_class_path, pluginNames)]
     print("start:{}".format(" ".join(command)))
 
     def block_sigint():
