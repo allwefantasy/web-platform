@@ -1,11 +1,11 @@
 package tech.mlsql.serviceframework.platform
 
 import java.io.File
-import java.net.{URL, URLClassLoader}
+import java.net.URL
 
 import tech.mlsql.serviceframework.platform.app.StartupPhase
 import tech.mlsql.serviceframework.platform.cleaner.ActionContextCleaner
-import tech.mlsql.serviceframework.platform.plugin.DefaultPlugin
+import tech.mlsql.serviceframework.platform.plugin.{DefaultPlugin, RuntimePluginLoader}
 
 /**
  * 20/1/2020 WilliamZhu(allwefantasy@gmail.com)
@@ -26,19 +26,20 @@ object PluginType {
 case class PluginLoader(loader: ClassLoader, plugin: Plugin)
 
 object PluginLoader {
-  def load(url: String, pluginClassName: String) = {
-    val path = if (url.toLowerCase().startsWith("http://")) {
+  def load(urls: Array[String], pluginClassName: String) = {
+    def toUrl(url: String) = if (url.toLowerCase().startsWith("http://")) {
       new URL(url)
     } else if (url.toLowerCase().startsWith("https://")) {
       new URL(url)
     } else {
       new File(url).toURI.toURL
     }
-    val loader = new URLClassLoader(Array(path))
+
+    val loader = new RuntimePluginLoader(urls.map(toUrl(_)))
     val plugin = loader.loadClass(pluginClassName).newInstance().asInstanceOf[Plugin]
 
     val pluginLoader = PluginLoader(loader, plugin)
-    AppRuntimeStore.store.registerClzzLoader(pluginClassName, pluginLoader)
+    //AppRuntimeStore.store.registerClzzLoader(pluginClassName, pluginLoader)
 
     plugin.entries.foreach { item =>
       item.pluginType match {

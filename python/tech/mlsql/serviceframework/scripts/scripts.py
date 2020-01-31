@@ -166,7 +166,7 @@ def run(runtime, plugin_name, dev, mvn, debug_port):
     debug_args = ""
     if dev:
         debug_args = "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address={}".format(str(debug_port))
-    command = ["java", debug_args, "-cp", ".:{}".format(app_runtime_jar), main_class,
+    command = ["java", "-Xms2g", debug_args, "-cp", ".:{}".format(app_runtime_jar), main_class,
                "-pluginPaths {} -pluginNames {}".format(bin_build_class_path, pluginNames)]
     print("start:{}".format(" ".join(command)))
 

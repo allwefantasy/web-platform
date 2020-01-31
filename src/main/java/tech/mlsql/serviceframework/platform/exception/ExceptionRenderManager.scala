@@ -9,7 +9,8 @@ object ExceptionRenderManager {
     var target: ExceptionResult = null
     AppRuntimeStore.store.getExceptionRenders().foreach { exRender =>
       if (!meet) {
-        val item = Class.forName(exRender.customClassItem.className, true, exRender.customClassItem.loader.loader).newInstance().asInstanceOf[ExceptionRender].call(e: Exception)
+
+        val item = exRender.customClassItem.loader.loader.loadClass(exRender.customClassItem.className).newInstance().asInstanceOf[ExceptionRender].call(e: Exception)
         if (item.str.isDefined) {
           meet = true
           target = item

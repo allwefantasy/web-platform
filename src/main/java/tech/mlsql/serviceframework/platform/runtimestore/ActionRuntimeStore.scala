@@ -15,7 +15,7 @@ trait ActionRuntimeStore {
   }
 
   def getActions() = {
-    store.view(classOf[AppItem]).iterator().asScala.toList
+    store.view(classOf[ActionItem]).iterator().asScala.toList
   }
 
   def getAction(name: String): Option[ActionItem] = {

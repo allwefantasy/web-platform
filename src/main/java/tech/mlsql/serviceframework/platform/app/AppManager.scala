@@ -10,11 +10,11 @@ object AppManager {
     AppRuntimeStore.store.getApp(appName) match {
       case Some(item) =>
         val clzzName = item.className
-        Class.forName(clzzName, true, item.loader.loader).
+        item.loader.loader.loadClass(clzzName).
           newInstance().asInstanceOf[CustomApp].run(params)
       case None => throw new RuntimeException(s"No app named ${appName}")
     }
   }
 
-  
+
 }

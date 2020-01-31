@@ -7,7 +7,7 @@ object RequestCleanerManager {
 
   def call() = {
     AppRuntimeStore.store.getRequestCleaners().foreach { cleaner =>
-      Class.forName(cleaner.customClassItem.className, true, cleaner.customClassItem.loader.loader).newInstance().asInstanceOf[RequestCleaner].call()
+      cleaner.customClassItem.loader.loader.loadClass(cleaner.customClassItem.className).newInstance().asInstanceOf[RequestCleaner].call()
     }
   }
 }
