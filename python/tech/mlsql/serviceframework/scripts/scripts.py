@@ -350,7 +350,22 @@ def compile(dev, mvn, pl):
     required=False,
     type=str,
     help="install bin or lib ")
-def release(mvn, install):
+@click.option(
+    "--deploy",
+    required=False,
+    type=str,
+    help="deploy to store ")
+@click.option(
+    "--user",
+    required=False,
+    type=str,
+    help="deploy to store ")
+@click.option(
+    "--password",
+    required=False,
+    type=str,
+    help="deploy to store ")
+def release(mvn, install, deploy, user, password):
     project_name = get_project_name()
     if not mvn:
         mvn = "./build/mvn"
@@ -379,6 +394,21 @@ def release(mvn, install):
         run_cmd(["cp", "-r", "{}/target/{}".format(bin_project, file), "release"])
     full_path = pathlib.Path().absolute()
     print("{}/release/{}".format(full_path, file))
+    if deploy:
+        uploadPlugin(deploy, "{}/release/{}".format(full_path, file),
+                     {"name": user, "password": password, "pluginName": project_name})
+
+
+def printRespose(r):
+    print(r.text)
+    print(r.status_code)
+
+
+def uploadPlugin(storePath, file_path, data):
+    values = {**data, **{"action": "uploadPlugin"}}
+    files = {file_path.split("/")[-1]: open(file_path, 'rb')}
+    r = requests.post(storePath, files=files, data=values)
+    printRespose(r)
 
 
 cli.add_command(create)

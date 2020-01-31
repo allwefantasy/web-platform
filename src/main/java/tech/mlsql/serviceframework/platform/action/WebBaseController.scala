@@ -57,7 +57,7 @@ class WebBaseController extends ApplicationController with Logging {
   def buildActionContext = {
     //multipart/form-data; boundary=d680f034ceffcf7fd318d98048072b65
     val conentType = request.httpServletRequest().getHeader("Content-Type")
-    val isMultiParetForm = conentType.toLowerCase().stripMargin.startsWith("multipart/form-data;")
+    val isMultiParetForm = conentType!=null && conentType.toLowerCase().stripMargin.startsWith("multipart/form-data;")
     if (isMultiParetForm) {
       val sfu = new ServletFileUpload(new DiskFileItemFactory())
       sfu.setHeaderEncoding("UTF-8")
