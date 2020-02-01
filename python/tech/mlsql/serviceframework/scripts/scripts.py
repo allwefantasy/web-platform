@@ -11,7 +11,9 @@ import time
 import click
 import requests
 
+import tech.mlsql.serviceframework.scripts.projectmanager as pm
 from tech.mlsql.serviceframework.scripts import jarmanager, appruntime
+from tech.mlsql.serviceframework.scripts.pathmanager import PathManager
 from tech.mlsql.serviceframework.scripts.process_info import ProcessInfo
 from tech.mlsql.serviceframework.scripts.processutils import *
 from tech.mlsql.serviceframework.scripts.shellutils import run_cmd
@@ -40,51 +42,23 @@ def cli():
 def create(name, empty):
     scala_prefix = "2.11"
 
-    command = ["git", "clone", "https://github.com/allwefantasy/baseweb"]
-    run_cmd(command)
-    run_cmd(["mv", "baseweb", name])
+    pm.clone_project(name)
+    pm.change_project_name(name)
 
-    run_cmd(["mv", os.path.join(name, "baseweb-bin"),
-             os.path.join(name, "{}-bin".format(name))])
-
-    run_cmd(["mv", os.path.join(name, "baseweb-lib"),
-             os.path.join(name, "{}-lib".format(name))])
+    pm.generate_admin_token_in_yml()
 
     if empty:
-        for item in [".git", "{}-bin".format(name), "{}-lib".format(name), "src"]:
-            shutil.rmtree(os.path.join(name, item))
-        for item in ["README.md", "pom.xml"]:
-            run_cmd(["rm", os.path.join(name, item)])
+        pm.clean_files_for_empty_project(name)
         return
 
-    def change_pom(pom_path):
-        with open(pom_path) as f:
-            newlines = [line.replace("baseweb_" + scala_prefix, name + "_" + scala_prefix) for line in f.readlines()]
-            newlines = [line.replace("baseweb-bin", name + "-bin") for line in newlines]
-            newlines = [line.replace("baseweb-lib", name + "-lib") for line in newlines]
+    pm.change_all_poms(name, scala_prefix)
 
-        with open(pom_path, "w") as f:
-            f.writelines(newlines)
-
-    change_pom(os.path.join(".", "{}", "pom.xml").format(name))
-
-    change_pom(os.path.join(".", "{}", "{}-bin", "pom.xml").format(name, name))
-    change_pom(os.path.join(".", "{}", "{}-lib", "pom.xml").format(name, name))
-
-    os.mkdir(os.path.join(".", name, ".sfcli"))
-    os.mkdir(os.path.join(".", name, ".sfcli", "cache"))
-    with open(os.path.join(".", name, ".sfcli", "projectName"), "w") as f:
-        f.writelines([name])
+    pm.create_cache_dir(name)
+    pm.create_project_file(name)
 
     shutil.rmtree(os.path.join(".", name, ".git"))
 
-    plugin_db_scala = "src/main/scala/tech/mlsql/app_runtime/example/PluginDB.scala".split("/")
-    plugin_db_scala_path = os.path.join(".", name, "{}-lib".format(name), *plugin_db_scala)
-    with open(plugin_db_scala_path) as f:
-        newlines = [item.replace('val plugin_name = "example"', 'val plugin_name = "{}"'.format(name)) for item in
-                    f.readlines()]
-    with open(plugin_db_scala_path, "w") as f:
-        f.writelines(newlines)
+    pm.change_plugin_db_scala_file(name)
 
     print("done")
 
@@ -130,8 +104,9 @@ def run(runtime, plugin_name, dev, mvn, debug_port):
     if os.path.exists(cache_path):
         app_runtime_jar = cache_path
 
-    lib_build_class_path = os.path.join(".", "{}-lib".format(project_name), "target", "classes")
-    bin_build_class_path = os.path.join(".", "{}-bin".format(project_name), "target", "classes")
+    path_manager = PathManager(project_name)
+    lib_build_class_path = path_manager.lib_classes()
+    bin_build_class_path = path_manager.bin_classes()
     # dependencies_output_path = os.path.join(".", "release", "libs")
     if dev:
         run_cmd([mvn, "-DskipTests", "install", "-pl", "{}-lib".format(project_name), "-am"])
@@ -273,6 +248,8 @@ def runtime(runtime_path):
         return None
     main_class = appruntime.get_app_runtime_main_class()
     app_runtime_jar = jarmanager.get_app_jar_path(runtime_path)
+    jarmanager.cache_app_jar(app_runtime_jar)
+
     command = ["java", "-cp", ".:{}".format(app_runtime_jar), main_class]
     print("start:{}".format(" ".join(command)))
 
@@ -363,11 +340,13 @@ def compile(dev, mvn, pl):
     "--user",
     required=False,
     type=str,
+    envvar='STORE_USER',
     help="deploy to store ")
 @click.option(
     "--password",
     required=False,
     type=str,
+    envvar='STORE_PASSWORD',
     help="deploy to store ")
 def release(mvn, install, deploy, user, password):
     project_name = get_project_name()
@@ -399,6 +378,8 @@ def release(mvn, install, deploy, user, password):
     full_path = pathlib.Path().absolute()
     print("{}/release/{}".format(full_path, file))
     if deploy:
+        if deploy == "store":
+            deploy = "http://store.mlsql.tech/run"
         uploadPlugin(deploy, "{}/release/{}".format(full_path, file),
                      {"name": user, "password": password, "pluginName": project_name})
 
