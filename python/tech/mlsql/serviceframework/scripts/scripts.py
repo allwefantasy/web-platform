@@ -13,6 +13,7 @@ import requests
 
 import tech.mlsql.serviceframework.scripts.projectmanager as pm
 from tech.mlsql.serviceframework.scripts import jarmanager, appruntime
+from tech.mlsql.serviceframework.scripts.actionmanager import ActionManager, DBConfig
 from tech.mlsql.serviceframework.scripts.pathmanager import PathManager
 from tech.mlsql.serviceframework.scripts.process_info import ProcessInfo
 from tech.mlsql.serviceframework.scripts.processutils import *
@@ -45,7 +46,7 @@ def create(name, empty):
     pm.clone_project(name)
     pm.change_project_name(name)
 
-    pm.generate_admin_token_in_yml()
+    pm.generate_admin_token_in_yml(name)
 
     if empty:
         pm.clean_files_for_empty_project(name)
@@ -214,21 +215,13 @@ def run(runtime, plugin_name, dev, mvn, debug_port):
 def plugin(add, remove, instance_address, token):
     if not instance_address:
         instance_address = "http://127.0.0.1:9007"
-
+    actionManager = ActionManager(instance_address, token, None)
     if add and remove:
         raise Exception("--add and --remove should not specified at the same time")
     if add:
-        execute_add_plugin(instance_address, add, token)
+        actionManager.installPluginFromUrl(add)
     if remove:
         pass
-
-
-def execute_add_plugin(instance_address, add, token):
-    res = requests.post("{}/run".format(instance_address),
-                        {"action": "registerPlugin", "url": add, "admin_token": token,
-                         "className": appruntime.get_plugin_main_class()})
-    print(res.status_code)
-    print(res.text)
 
 
 @cli.command()
@@ -350,6 +343,7 @@ def compile(dev, mvn, pl):
     help="deploy to store ")
 def release(mvn, install, deploy, user, password):
     project_name = get_project_name()
+    actionManager = ActionManager(None, None, None)
     if not mvn:
         mvn = "./build/mvn"
 
@@ -380,8 +374,89 @@ def release(mvn, install, deploy, user, password):
     if deploy:
         if deploy == "store":
             deploy = "http://store.mlsql.tech/run"
-        uploadPlugin(deploy, "{}/release/{}".format(full_path, file),
-                     {"name": user, "password": password, "pluginName": project_name})
+        actionManager.uploadPlugin(deploy, "{}/release/{}".format(full_path, file),
+                                   {"name": user, "password": password, "pluginName": project_name})
+
+
+@cli.command()
+@click.option(
+    "--plugin_name",
+    required=True,
+    type=str,
+    help="plugin name")
+@click.option(
+    "--db_name",
+    required=True,
+    type=str,
+    help="")
+@click.option(
+    "--host",
+    required=True,
+    type=str,
+    help="")
+@click.option(
+    "--port",
+    required=False,
+    type=int,
+    help="")
+@click.option(
+    "--user",
+    required=True,
+    type=str,
+    help="")
+@click.option(
+    "--password",
+    required=True,
+    type=str,
+    help="")
+@click.option(
+    "--instance_address",
+    required=False,
+    type=str,
+    help="the runtime url path,default http://127.0.0.1:9007")
+@click.option(
+    "--token",
+    required=False,
+    type=str,
+    help="admin token")
+def add_db(plugin_name, db_name, host, port, user, password, instance_address, token):
+    if not instance_address:
+        instance_address = "http://127.0.0.1:9007"
+    if not port:
+        port = 3306
+    action_manager = ActionManager(instance_address, token, None)
+    r = action_manager.addDB(plugin_name, DBConfig(db_name, host, port, user, password))
+    print(r.status_code)
+    print(r.text)
+
+
+@cli.command()
+@click.option(
+    "--plugin_name",
+    required=True,
+    type=str,
+    help="plugin name")
+@click.option(
+    "--url",
+    required=True,
+    type=str,
+    help="the rest api ")
+@click.option(
+    "--instance_address",
+    required=False,
+    type=str,
+    help="the runtime url path,default http://127.0.0.1:9007")
+@click.option(
+    "--token",
+    required=False,
+    type=str,
+    help="admin token")
+def add_action_proxy(plugin_name, url, instance_address, token):
+    if not instance_address:
+        instance_address = "http://127.0.0.1:9007"
+    action_manager = ActionManager(instance_address, token, None)
+    action_manager.addProxy(plugin_name, url)
+    pass
 
 
 def printRespose(r):
@@ -402,6 +477,8 @@ cli.add_command(release)
 cli.add_command(run)
 cli.add_command(plugin)
 cli.add_command(runtime)
+cli.add_command(add_db)
+cli.add_command(add_action_proxy)
 
 
 def main():

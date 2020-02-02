@@ -64,8 +64,8 @@ def clean_files_for_empty_project(name):
         run_cmd(["rm", os.path.join(name, item)])
 
 
-def generate_admin_token_in_yml():
+def generate_admin_token_in_yml(name):
     admin_token = str(uuid.uuid4())
-    with open(os.path.join(".", "config", "application.yml"), "a") as ayml:
-        ayml.writelines(["admin_token:{}".format(admin_token)])
+    with open(os.path.join(".", name, "config", "application.yml"), "a") as ayml:
+        ayml.writelines(["admin_token: {}".format(admin_token)])
     return admin_token

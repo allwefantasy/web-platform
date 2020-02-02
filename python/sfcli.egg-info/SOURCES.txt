@@ -10,6 +10,7 @@ tech/mlsql/__init__.py
 tech/mlsql/serviceframework/__init__.py
 tech/mlsql/serviceframework/version.py
 tech/mlsql/serviceframework/scripts/__init__.py
+tech/mlsql/serviceframework/scripts/actionmanager.py
 tech/mlsql/serviceframework/scripts/appruntime.py
 tech/mlsql/serviceframework/scripts/jarmanager.py
 tech/mlsql/serviceframework/scripts/pathmanager.py

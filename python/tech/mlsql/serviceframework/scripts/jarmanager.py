@@ -25,7 +25,7 @@ def cache_app_jar(app_runtime_jar):
     cache_path = get_cache_path()
     cache_dir = pathlib.Path(cache_path).parent
     if not cache_dir.exists():
-        cache_dir.mkdir()
+        cache_dir.mkdir(parents=True)
 
     def is_http_loc():
         return (app_runtime_jar.startswith("http://") or \
