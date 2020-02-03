@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
+
 import os
 import shutil
 import subprocess
-import sys
 
 subprocess_check_output = subprocess.check_output
 subprocess_check_call = subprocess.check_call
@@ -30,19 +30,19 @@ def rm_r(path):
         os.remove(path)
 
 
-def run_cmd(cmd, return_output=False):
+def run_cmd(cmd, return_output=False, shell=False):
     """
     Given a command as a list of arguments will attempt to execute the command
     and, on failure, print an error message and return -1.
     """
 
-    if not isinstance(cmd, list):
+    if not isinstance(cmd, list) and not shell:
         cmd = cmd.split()
     try:
         if return_output:
-            return subprocess_check_output(cmd)
+            return subprocess_check_output(cmd, shell=shell)
         else:
-            return subprocess_check_call(cmd)
+            return subprocess_check_call(cmd, shell=shell)
     except subprocess.CalledProcessError as e:
         return exit_from_command_with_retcode(e.cmd, e.returncode)
 

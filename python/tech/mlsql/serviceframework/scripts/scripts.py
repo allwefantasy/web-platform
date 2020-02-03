@@ -39,8 +39,19 @@ def cli():
 @click.option(
     "--empty",
     required=False,
+    type=bool,
     help="is empty project")
-def create(name, empty):
+@click.option(
+    "--include_ui",
+    is_flag=True,
+    required=False,
+    help="ReactJS project - web_console")
+@click.option(
+    "--ui_command",
+    required=False,
+    type=str,
+    help="default: create-react-app web_console")
+def create(name, empty, include_ui, ui_command):
     scala_prefix = "2.11"
 
     pm.clone_project(name)
@@ -60,6 +71,12 @@ def create(name, empty):
     shutil.rmtree(os.path.join(".", name, ".git"))
 
     pm.change_plugin_db_scala_file(name)
+
+    if include_ui:
+        command = "create-react-app web_console"
+        if ui_command:
+            command = ui_command
+        run_cmd(command)
 
     print("done")
 
@@ -341,11 +358,31 @@ def compile(dev, mvn, pl):
     type=str,
     envvar='STORE_PASSWORD',
     help="deploy to store ")
-def release(mvn, install, deploy, user, password):
+@click.option(
+    "--skip_ui",
+    required=False,
+    type=bool,
+    help="include ui")
+def release(mvn, install, deploy, user, password, skip_ui):
     project_name = get_project_name()
     actionManager = ActionManager(None, None, None)
     if not mvn:
         mvn = "./build/mvn"
+
+    bin_project = "{}-bin".format(project_name)
+    if not skip_ui and os.path.exists("web_console"):
+        resource_dir = os.path.join(bin_project, "src", "main", "resources", project_name, project_name)
+        if os.path.exists(resource_dir):
+            shutil.rmtree(resource_dir)
+        if not os.path.exists(resource_dir):
+            run_cmd(["mkdir", "-p", resource_dir])
+
+        cwd = os.getcwd()
+        os.chdir("./web_console")
+        run_cmd(["npm", "run", "build"])
+        os.chdir(cwd)
+        run_cmd(["rm", "-rf", os.path.join(resource_dir, "*")])
+        run_cmd("cp -r {} {}".format(os.path.join("web_console", "build", "*"), resource_dir), shell=True)
 
     if install:
         install_module = "{}-{}".format(project_name, install)
@@ -354,7 +391,6 @@ def release(mvn, install, deploy, user, password):
         print("execute: {}".format(" ".join(command)))
         return
 
-    bin_project = "{}-bin".format(project_name)
     command = [mvn, "-DskipTests", "clean", "package", "-Pshade", "-pl", bin_project, "-am"]
     print("execute: {}".format(" ".join(command)))
     run_cmd(command)
