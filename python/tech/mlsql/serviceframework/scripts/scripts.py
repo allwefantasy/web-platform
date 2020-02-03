@@ -76,7 +76,11 @@ def create(name, empty, include_ui, ui_command):
         command = "create-react-app web_console"
         if ui_command:
             command = ui_command
+        cwd = os.getcwd()
+        os.chdir(os.path.join(name))
         run_cmd(command)
+        pm.change_package_json()
+        os.chdir(cwd)
 
     print("done")
 

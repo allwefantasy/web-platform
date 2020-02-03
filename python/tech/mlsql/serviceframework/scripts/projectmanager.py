@@ -57,6 +57,16 @@ def change_plugin_db_scala_file(name):
         f.writelines(newlines)
 
 
+def change_package_json():
+    import json
+    package_json_path = "web_console/package.json"
+    with open(package_json_path) as f:
+        config = json.load(f)
+        config["homepage"] = "./"
+    with open(package_json_path, "w") as f:
+        json.dump(config, f, indent=4)
+
+
 def clean_files_for_empty_project(name):
     for item in [".git", "{}-bin".format(name), "{}-lib".format(name), "src"]:
         shutil.rmtree(os.path.join(name, item))
