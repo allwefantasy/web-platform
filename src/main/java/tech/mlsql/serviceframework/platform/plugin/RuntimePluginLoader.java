@@ -32,24 +32,27 @@ public class RuntimePluginLoader extends URLClassLoader {
     protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
         Class<?> c = null;
         synchronized (getClassLoadingLock(name)) {
-            c = classCache.getIfPresent(name);
-            if (c == null) {
-                try {
-                    long t1 = System.nanoTime();
-                    c = findClass(name);
-                    sun.misc.PerfCounter.getFindClassTime().addElapsedTimeFrom(t1);
-                    sun.misc.PerfCounter.getFindClasses().increment();
-                    resolveClass(c);
-                    classCache.put(name, c);
-                } catch (Exception e) {
-                    c = null;
+            if (name.startsWith("java.") || name.startsWith("javax.") || name.startsWith("org.slf4j")) {
+                c = super.loadClass(name, false);
+            } else {
+                c = classCache.getIfPresent(name);
+                if (c == null) {
+                    try {
+                        long t1 = System.nanoTime();
+                        c = findClass(name);
+                        sun.misc.PerfCounter.getFindClassTime().addElapsedTimeFrom(t1);
+                        sun.misc.PerfCounter.getFindClasses().increment();
+                        resolveClass(c);
+                        classCache.put(name, c);
+                    } catch (Exception e) {
+                        c = null;
+                    }
+                }
+
+                if (c == null) {
+                    c = super.loadClass(name, false);
                 }
             }
-
-            if (c == null) {
-                c = super.loadClass(name, false);
-            }
-
         }
         return c;
     }

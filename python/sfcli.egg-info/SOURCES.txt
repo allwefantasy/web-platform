@@ -19,3 +19,4 @@ tech/mlsql/serviceframework/scripts/processutils.py
 tech/mlsql/serviceframework/scripts/projectmanager.py
 tech/mlsql/serviceframework/scripts/scripts.py
 tech/mlsql/serviceframework/scripts/shellutils.py
+tech/mlsql/serviceframework/scripts/test.py

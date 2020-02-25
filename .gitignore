@@ -7,3 +7,4 @@ dev/docker/*.jar
 python/.eggs/
 python/build/
 python/dist
+__pycache__

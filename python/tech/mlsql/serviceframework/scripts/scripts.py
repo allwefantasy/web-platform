@@ -39,7 +39,7 @@ def cli():
 @click.option(
     "--empty",
     required=False,
-    type=bool,
+    is_flag=True,
     help="is empty project")
 @click.option(
     "--include_ui",
@@ -80,6 +80,9 @@ def create(name, empty, include_ui, ui_command):
         os.chdir(os.path.join(name))
         run_cmd(command)
         pm.change_package_json()
+        # run_cmd(["npm", "i", "@allwefantasy/web-platform-ui", "--save"])
+        run_cmd("cp -r web-ui-template/*  web_console/src/", shell=True)
+        run_cmd("rm -rf web-ui-template", shell=True)
         os.chdir(cwd)
 
     print("done")
@@ -99,7 +102,7 @@ def create(name, empty, include_ui, ui_command):
 @click.option(
     "--dev",
     required=False,
-    type=bool,
+    is_flag=True,
     help="enable dev")
 @click.option(
     "--mvn",
@@ -251,7 +254,12 @@ def plugin(add, remove, instance_address, token):
     required=False,
     type=str,
     help="the path of app-runtime")
-def runtime(runtime_path):
+@click.option(
+    "--max_memory",
+    required=False,
+    type=str,
+    help="memory")
+def runtime(runtime_path, max_memory):
     try:
         os.setpgrp()
     except OSError as e:
@@ -263,8 +271,11 @@ def runtime(runtime_path):
     main_class = appruntime.get_app_runtime_main_class()
     app_runtime_jar = jarmanager.get_app_jar_path(runtime_path)
     jarmanager.cache_app_jar(app_runtime_jar)
+    java_args = []
+    if max_memory:
+        java_args.append("-Xmx{}".format(max_memory))
 
-    command = ["java", "-cp", ".:{}".format(app_runtime_jar), main_class]
+    command = ["java"] + java_args + ["-cp", ".:{}".format(app_runtime_jar), main_class]
     print("start:{}".format(" ".join(command)))
 
     def block_sigint():
@@ -300,7 +311,7 @@ def runtime(runtime_path):
 @click.option(
     "--dev",
     required=False,
-    type=bool,
+    is_flag=True,
     help="enable dev")
 @click.option(
     "--mvn",

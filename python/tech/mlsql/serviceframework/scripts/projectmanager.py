@@ -63,6 +63,7 @@ def change_package_json():
     with open(package_json_path) as f:
         config = json.load(f)
         config["homepage"] = "./"
+        config["proxy"] = "http://127.0.0.1:9007"
     with open(package_json_path, "w") as f:
         json.dump(config, f, indent=4)
 
