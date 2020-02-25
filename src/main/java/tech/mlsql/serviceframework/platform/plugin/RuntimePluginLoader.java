@@ -4,6 +4,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
+import tech.mlsql.serviceframework.platform.PackageNames;
 
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -33,11 +34,11 @@ public class RuntimePluginLoader extends URLClassLoader {
         Class<?> c = null;
         synchronized (getClassLoadingLock(name)) {
 
-            c = super.findLoadedClass(name);
+            c = findLoadedClass(name);
             if (c != null) return c;
 
             if (c == null) {
-                ClassLoader parent = super.getParent();
+                ClassLoader parent = getParent();
                 while (parent != null && c == null) {
                     c = (Class<?>) ReflectUtils.method(parent, "findLoadedClass", name, false);
                     parent = parent.getParent();
@@ -50,10 +51,24 @@ public class RuntimePluginLoader extends URLClassLoader {
                 }
             }
 
+            boolean loadInParent = false;
+
             if (name.startsWith("java.")
                     || name.startsWith("javax.")
-                    || name.startsWith("scala.")
-            ) {
+                    || name.startsWith("scala.")) {
+                loadInParent = true;
+            }
+
+            if (!loadInParent) {
+                for (String item : PackageNames.names) {
+                    if (name.startsWith(item)) {
+                        loadInParent = true;
+                        break;
+                    }
+                }
+            }
+
+            if (loadInParent) {
                 c = super.loadClass(name, false);
             } else {
                 c = classCache.getIfPresent(name);
