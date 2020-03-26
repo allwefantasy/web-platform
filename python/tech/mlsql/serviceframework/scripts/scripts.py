@@ -134,18 +134,23 @@ def run(runtime, plugin_name, dev, mvn, debug_port):
     bin_build_class_path = path_manager.bin_classes()
     # dependencies_output_path = os.path.join(".", "release", "libs")
     if dev:
-        run_cmd([mvn, "-DskipTests", "install", "-pl", "{}-lib".format(project_name), "-am"])
-        run_cmd([mvn, "-DskipTests", "compile", "-pl", "{}-bin".format(project_name)])
+        run_cmd([mvn, "-DskipTests", "install", "-pl",
+                 "{}-lib".format(project_name), "-am"])
+        run_cmd([mvn, "-DskipTests", "compile",
+                 "-pl", "{}-bin".format(project_name)])
         plugins = [app_runtime_jar]
         # run_cmd(["mvn", "dependency:copy-dependencies", "-DincludeScope=runtime",
         #          "-DoutputDirectory={}".format(dependencies_output_path)], "-fn")
         class_path_str_file = os.path.join(".sfcli", ".classpath")
-        run_cmd([mvn, "dependency:build-classpath", "-Dmdep.outputFile={}".format(class_path_str_file)])
+        run_cmd([mvn, "dependency:build-classpath",
+                 "-Dmdep.outputFile={}".format(class_path_str_file)])
         with open(class_path_str_file, "r") as f:
             class_path_str = f.readlines()[0].strip("\n")
-        app_runtime_jar = app_runtime_jar + ":" + class_path_str + ":" + lib_build_class_path
+        app_runtime_jar = app_runtime_jar + ":" + \
+            class_path_str + ":" + lib_build_class_path
     else:
-        plugins = ["./release/{}".format(jarName) for jarName in os.listdir("release") if jarName.endswith(".jar")]
+        plugins = ["./release/{}".format(jarName)
+                   for jarName in os.listdir("release") if jarName.endswith(".jar")]
     try:
         os.setpgrp()
     except OSError as e:
@@ -165,7 +170,8 @@ def run(runtime, plugin_name, dev, mvn, debug_port):
 
     debug_args = ""
     if dev:
-        debug_args = "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address={}".format(str(debug_port))
+        debug_args = "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address={}".format(
+            str(debug_port))
     command = ["java", "-Xms2g", debug_args, "-cp", ".:{}".format(app_runtime_jar), main_class,
                "-pluginPaths {} -pluginNames {}".format(bin_build_class_path, pluginNames)]
     print("start:{}".format(" ".join(command)))
@@ -241,7 +247,8 @@ def plugin(add, remove, instance_address, token):
         instance_address = "http://127.0.0.1:9007"
     actionManager = ActionManager(instance_address, token, None)
     if add and remove:
-        raise Exception("--add and --remove should not specified at the same time")
+        raise Exception(
+            "--add and --remove should not specified at the same time")
     if add:
         actionManager.installPluginFromUrl(add)
     if remove:
@@ -275,7 +282,8 @@ def runtime(runtime_path, max_memory):
     if max_memory:
         java_args.append("-Xmx{}".format(max_memory))
 
-    command = ["java"] + java_args + ["-cp", ".:{}".format(app_runtime_jar), main_class]
+    command = ["java"] + java_args + \
+        ["-cp", ".:{}".format(app_runtime_jar), main_class]
     print("start:{}".format(" ".join(command)))
 
     def block_sigint():
@@ -376,17 +384,34 @@ def compile(dev, mvn, pl):
 @click.option(
     "--skip_ui",
     required=False,
-    type=bool,
+    is_flag=True,
     help="include ui")
-def release(mvn, install, deploy, user, password, skip_ui):
-    project_name = get_project_name()
+@click.option(
+    "--mlsql_store",
+    required=False,
+    is_flag=True,
+    help="mlsql_store")
+@click.option(
+    "--module",
+    required=False,
+    type=str,
+    help="mlsql_store")
+def release(mvn, install, deploy, user, password, skip_ui, mlsql_store, module):
     actionManager = ActionManager(None, None, None)
+    if mlsql_store:
+        release_mlsql_plugin(actionManager, mvn, deploy,
+                             module, user, password)
+        return
+
+    project_name = get_project_name()
+
     if not mvn:
         mvn = "./build/mvn"
 
     bin_project = "{}-bin".format(project_name)
     if not skip_ui and os.path.exists("web_console"):
-        resource_dir = os.path.join(bin_project, "src", "main", "resources", project_name, project_name)
+        resource_dir = os.path.join(
+            bin_project, "src", "main", "resources", project_name, project_name)
         if os.path.exists(resource_dir):
             shutil.rmtree(resource_dir)
         if not os.path.exists(resource_dir):
@@ -397,16 +422,19 @@ def release(mvn, install, deploy, user, password, skip_ui):
         run_cmd(["npm", "run", "build"])
         os.chdir(cwd)
         run_cmd(["rm", "-rf", os.path.join(resource_dir, "*")])
-        run_cmd("cp -r {} {}".format(os.path.join("web_console", "build", "*"), resource_dir), shell=True)
+        run_cmd("cp -r {} {}".format(os.path.join("web_console",
+                                                  "build", "*"), resource_dir), shell=True)
 
     if install:
         install_module = "{}-{}".format(project_name, install)
-        command = [mvn, "-DskipTests", "clean", "install", "-pl", install_module, "-am"]
+        command = [mvn, "-DskipTests", "clean",
+                   "install", "-pl", install_module, "-am"]
         run_cmd(command)
         print("execute: {}".format(" ".join(command)))
         return
 
-    command = [mvn, "-DskipTests", "clean", "package", "-Pshade", "-pl", bin_project, "-am"]
+    command = [mvn, "-DskipTests", "clean", "package",
+               "-Pshade", "-pl", bin_project, "-am"]
     print("execute: {}".format(" ".join(command)))
     run_cmd(command)
     if os.path.exists("release"):
@@ -426,7 +454,45 @@ def release(mvn, install, deploy, user, password, skip_ui):
         if deploy == "store":
             deploy = "http://store.mlsql.tech/run"
         actionManager.uploadPlugin(deploy, "{}/release/{}".format(full_path, file),
-                                   {"name": user, "password": password, "pluginName": project_name})
+                                   {"userName": user, "password": password, "pluginName": project_name})
+
+
+def release_mlsql_plugin(actionManager, mvn, deploy, module_name, user, password):
+
+    if not mvn:
+        mvn = "mvn"
+
+    command = [mvn, "-DskipTests", "clean",
+               "package", "-Pshade", "-pl", module_name]
+    run_cmd(command)
+
+    group = []
+    with open("./{}/desc.plugin".format(module_name), "r") as f:
+        config = {}
+        for line in f.readlines():
+            if line and line.strip():
+                clean_line = line.strip()                
+                if clean_line == "__SPLITTER__":                    
+                    group.append(config)
+                    config = {}
+                else:
+                    (k, v) = clean_line.split("=", 1)
+                    config[k] = v
+        group.append(config)            
+    for config in group:
+        print(config)
+        plugin_name = config.get("moduleName") or module_name
+        version = config["version"]
+        scala_version = config["scala_version"]
+
+        if deploy == "store":
+            deploy = "http://store.mlsql.tech/run"
+        full_path = pathlib.Path().absolute()
+        print("uploading {}.....".format(plugin_name))
+        actionManager.uploadPlugin(deploy, "{}/{}/target/{}".format(full_path, module_name, "{}_{}-{}.jar".format(module_name, scala_version, version)),
+                                {"userName": user, "password": password,
+                                    "pluginType": "MLSQL_PLUGIN",
+                                    "pluginName": plugin_name, **config})
 
 
 @cli.command()
@@ -476,7 +542,8 @@ def add_db(plugin_name, db_name, host, port, user, password, instance_address, t
     if not port:
         port = 3306
     action_manager = ActionManager(instance_address, token, None)
-    r = action_manager.addDB(plugin_name, DBConfig(db_name, host, port, user, password))
+    r = action_manager.addDB(plugin_name, DBConfig(
+        db_name, host, port, user, password))
     print(r.status_code)
     print(r.text)
 

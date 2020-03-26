@@ -6,15 +6,15 @@
 
     <groupId>tech.mlsql.serviceframework.baseweb</groupId>
     <artifactId>web-platform_2.11</artifactId>
-    <version>0.1.4</version>
+    <version>0.1.5</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <scala.version>2.11.8</scala.version>
         <scala.binary.version>2.11</scala.binary.version>
         <scala.jline.version>2.11.0-M3</scala.jline.version>
-        <serviceframework.version>2.0.2</serviceframework.version>
-        <common-utils-version>0.2.1</common-utils-version>
+        <serviceframework.version>2.0.5</serviceframework.version>
+        <common-utils-version>0.2.8</common-utils-version>
         <hadoop-version>2.6.0</hadoop-version>
         <httpclient.version>4.5.3</httpclient.version>
     </properties>
@@ -182,17 +182,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.fusesource.leveldbjni</groupId>
-            <artifactId>leveldbjni-all</artifactId>
-            <version>1.8</version>
-        </dependency>
-
-        <dependency>
-            <groupId>commons-fileupload</groupId>
-            <artifactId>commons-fileupload</artifactId>
-            <version>1.4</version>
-        </dependency>
-        <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-compress</artifactId>
             <version>1.18</version>
@@ -231,11 +220,6 @@
             <version>3.6.1</version>
         </dependency>
 
-        <dependency>
-            <groupId>net.java.dev.jna</groupId>
-            <artifactId>jna-platform</artifactId>
-            <version>5.3.1</version>
-        </dependency>
 
         <dependency>
             <groupId>net.csdn</groupId>

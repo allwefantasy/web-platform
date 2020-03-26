@@ -13,7 +13,7 @@ def get_app_jar_path(runtime):
         app_runtime_jar = runtime
 
     if app_runtime_jar == "":
-        app_runtime_jar = "http://download.mlsql.tech/app-runtime-1.0.0/app-runtime_2.11-1.0.0.jar "
+        app_runtime_jar = "http://download.mlsql.tech/app-runtime/app-runtime-simple_2.11-1.0.0.jar"
     return app_runtime_jar
 
 

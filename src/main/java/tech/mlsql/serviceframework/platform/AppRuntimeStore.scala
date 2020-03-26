@@ -2,7 +2,7 @@ package tech.mlsql.serviceframework.platform
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import tech.mlsql.serviceframework.platform.app.StartupPhase
-import tech.mlsql.serviceframework.platform.appstore.{InMemoryStore, KVIndex, KVStore}
+import tech.mlsql.common.utils.kv.{InMemoryStore, KVIndex, KVStore}
 import tech.mlsql.serviceframework.platform.loader.ClzzLoaderRuntimeStore
 import tech.mlsql.serviceframework.platform.runtimestore.{ActionRuntimeStore, CustomAppRuntimeStore, ExceptionRenderRuntimeStore, RequestCleanerRuntimeStore}
 
