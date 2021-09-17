@@ -3,18 +3,22 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
     <groupId>tech.mlsql.serviceframework.baseweb</groupId>
-    <artifactId>web-platform_2.11</artifactId>
+    <artifactId>web-platform_{{scala_binary_version}}</artifactId>
     <version>0.1.6</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <scala.version>2.11.8</scala.version>
-        <scala.binary.version>2.11</scala.binary.version>
-        <scala.jline.version>2.11.0-M3</scala.jline.version>
-        <serviceframework.version>2.0.5</serviceframework.version>
-        <common-utils-version>0.2.8</common-utils-version>
+
+        <scala.version>{{scala_version}}</scala.version>
+        <scala.binary.version>{{scala_binary_version}}</scala.binary.version>
+        <spark.version>{{spark_version}}</spark.version>
+        <spark.bigversion>{{spark_binary_version}}</spark.bigversion>
+        <spark.binary.version>{{spark_binary_version}}</spark.binary.version>
+
+
+        <serviceframework.version>2.0.7</serviceframework.version>
+        <common-utils-version>0.3.9.2</common-utils-version>
         <hadoop-version>2.6.0</hadoop-version>
         <httpclient.version>4.5.3</httpclient.version>
     </properties>
@@ -51,20 +55,6 @@
     </issueManagement>
 
     <profiles>
-        <profile>
-            <id>scala-2.11</id>
-            <properties>
-                <scala.version>2.11.8</scala.version>
-                <scala.binary.version>2.11</scala.binary.version>
-            </properties>
-        </profile>
-        <profile>
-            <id>scala-2.12</id>
-            <properties>
-                <scala.version>2.12.8</scala.version>
-                <scala.binary.version>2.12</scala.binary.version>
-            </properties>
-        </profile>
         <profile>
             <id>disable-java8-doclint</id>
             <activation>

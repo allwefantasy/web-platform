@@ -65,7 +65,8 @@ class WebBaseController extends ApplicationController with Logging {
       val newParams = formItems.
         asScala.filter(f => f.isFormField).
         map(f => (f.getFieldName, new String(f.get(), "utf-8"))).toMap
-      new ActionContext(HttpContext(request, restResponse), newParams, Map(ActionContext.Config.formItems -> formItems,
+      
+      new ActionContext(HttpContext(request, restResponse), newParams++params().asScala.toMap, Map(ActionContext.Config.formItems -> formItems,
         ActionContext.Config.servletFileUpload -> sfu), false)
     } else {
       new ActionContext(HttpContext(request, restResponse), params().asScala.toMap, Map(), false)

@@ -147,7 +147,7 @@ def run(runtime, plugin_name, dev, mvn, debug_port):
         with open(class_path_str_file, "r") as f:
             class_path_str = f.readlines()[0].strip("\n")
         app_runtime_jar = app_runtime_jar + ":" + \
-            class_path_str + ":" + lib_build_class_path
+                          class_path_str + ":" + lib_build_class_path
     else:
         plugins = ["./release/{}".format(jarName)
                    for jarName in os.listdir("release") if jarName.endswith(".jar")]
@@ -283,7 +283,7 @@ def runtime(runtime_path, max_memory):
         java_args.append("-Xmx{}".format(max_memory))
 
     command = ["java"] + java_args + \
-        ["-cp", ".:{}".format(app_runtime_jar), main_class]
+              ["-cp", ".:{}".format(app_runtime_jar), main_class]
     print("start:{}".format(" ".join(command)))
 
     def block_sigint():
@@ -458,39 +458,50 @@ def release(mvn, install, deploy, user, password, skip_ui, mlsql_store, module):
 
 
 def release_mlsql_plugin(actionManager, mvn, deploy, module_name, user, password):
-
-    if not mvn:
-        mvn = "mvn"
-
-    command = [mvn, "-DskipTests", "clean",
-               "package", "-Pshade", "-pl", module_name]
-    run_cmd(command)
-
     group = []
     with open("./{}/desc.plugin".format(module_name), "r") as f:
         config = {}
         for line in f.readlines():
             if line and line.strip():
-                clean_line = line.strip()                
-                if clean_line == "__SPLITTER__":                    
+                clean_line = line.strip()
+                if clean_line == "__SPLITTER__":
                     group.append(config)
                     config = {}
                 else:
                     (k, v) = clean_line.split("=", 1)
                     config[k] = v
-        group.append(config)            
+        group.append(config)
     for config in group:
         print(config)
         plugin_name = config.get("moduleName") or module_name
         version = config["version"]
         scala_version = config["scala_version"]
+        spark_version = "spark_version" in config and config["spark_version"]
+
+        if not mvn:
+            mvn = "mvn"
+
+        spark_params = []
+        if spark_version:
+            spark_params = ["-Pspark-{}".format(spark_version)]
+        command = [mvn, "-DskipTests", "clean",
+                   "package", "-Pshade", ] + spark_params + ["-Pscala-{}".format(scala_version)] + ["-pl", module_name]
+        run_cmd(command)
 
         if deploy == "store":
             deploy = "http://store.mlsql.tech/run"
         full_path = pathlib.Path().absolute()
         print("uploading {}.....".format(plugin_name))
-        actionManager.uploadPlugin(deploy, "{}/{}/target/{}".format(full_path, module_name, "{}_{}-{}.jar".format(module_name, scala_version, version)),
-                                {"userName": user, "password": password,
+
+        jar_name = module_name
+        if spark_version:
+            jar_name = module_name + "-" + spark_version
+        ab_file_path = "{}/{}/target/{}".format(full_path, module_name,
+                                                "{}_{}-{}.jar".format(jar_name, scala_version,
+                                                                      version))
+        print("upload file： {}...".format(ab_file_path))
+        actionManager.uploadPlugin(deploy, ab_file_path,
+                                   {"userName": user, "password": password,
                                     "pluginType": "MLSQL_PLUGIN",
                                     "pluginName": plugin_name, **config})
 
