@@ -12,9 +12,6 @@
 
         <scala.version>{{scala_version}}</scala.version>
         <scala.binary.version>{{scala_binary_version}}</scala.binary.version>
-        <spark.version>{{spark_version}}</spark.version>
-        <spark.bigversion>{{spark_binary_version}}</spark.bigversion>
-        <spark.binary.version>{{spark_binary_version}}</spark.binary.version>
 
 
         <serviceframework.version>2.0.7</serviceframework.version>
