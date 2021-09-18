@@ -3,6 +3,7 @@ package tech.mlsql.serviceframework.platform
 import java.io.File
 import java.net.URL
 
+import tech.mlsql.common.utils.classloader.ClassLoaderTool
 import tech.mlsql.serviceframework.platform.app.StartupPhase
 import tech.mlsql.serviceframework.platform.cleaner.ActionContextCleaner
 import tech.mlsql.serviceframework.platform.plugin.{DefaultPlugin, RuntimePluginLoader}
@@ -26,6 +27,32 @@ object PluginType {
 case class PluginLoader(loader: ClassLoader, plugin: Plugin)
 
 object PluginLoader {
+
+  def register(entries: List[PluginItem],plugin:Plugin) = {
+
+    entries.foreach { item =>
+      val pluginLoader = PluginLoader(ClassLoaderTool.getContextOrDefaultLoader,plugin)
+      item.pluginType match {
+        case PluginType.action =>
+          AppRuntimeStore.store.registerAction(item.name, item.clzzName, pluginLoader)
+        case PluginType.app =>
+          AppRuntimeStore.store.registerApp(item.name, item.clzzName, pluginLoader, item.phase)
+        case PluginType.exception =>
+          AppRuntimeStore.store.registerExceptionRender(item.name, item.clzzName, pluginLoader)
+        case PluginType.cleaner =>
+          AppRuntimeStore.store.registerRequestCleaner(item.name, item.clzzName, pluginLoader)
+      }
+
+    }
+
+    val defaultCleanerName = "ActionContextCleaner"
+    if (!AppRuntimeStore.store.getAction(defaultCleanerName).isDefined) {
+      val defaultPlugin = new DefaultPlugin()
+      AppRuntimeStore.store.registerRequestCleaner(defaultCleanerName, classOf[ActionContextCleaner].getName,
+        PluginLoader(Thread.currentThread().getContextClassLoader, defaultPlugin))
+    }
+  }
+
   def load(urls: Array[String], pluginClassName: String) = {
     def toUrl(url: String) = if (url.toLowerCase().startsWith("http://")) {
       new URL(url)
