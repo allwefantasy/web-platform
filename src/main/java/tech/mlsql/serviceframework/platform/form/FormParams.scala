@@ -75,7 +75,7 @@ case class Transfer(name: String, sourceValues: List[KV], targetValues: List[KV]
 
 case class TimePicker(name: String, values: List[KV], tpe: String = "TimePicker", @transient valueProvider: Option[() => List[KV]] = None)
 
-case class Upload(name: String, tpe: String = "Upload")
+case class Upload(name: String, valueProviderName: String, tpe: String = "Upload")
 
 case class Dynamic(name: String, tpe: String = "Dynamic", subTpe: String, depends: List[String], valueProviderName: String)
 

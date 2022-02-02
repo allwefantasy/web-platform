@@ -18,10 +18,10 @@ import scala.collection.JavaConverters._
  */
 class WebBaseController extends ApplicationController with Logging {
   @Action(
-    summary = "used to execute MLSQL script", description = "async/sync supports"
+    summary = "Action Entry", description = "Action Entry"
   )
   @Parameters(Array(
-    new Parameter(name = "action", required = false, description = "query|analyze; default is query", `type` = "string", allowEmptyValue = false)
+    new Parameter(name = "action", required = false, description = "action name.", `type` = "string", allowEmptyValue = false)
   ))
   @Responses(Array(
     new ApiResponse(responseCode = "200", description = "", content = new Content(mediaType = "application/json",
