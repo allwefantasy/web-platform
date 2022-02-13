@@ -70,3 +70,10 @@ http:
     accept:
       timeout: 43200000
 
+ratelimiter:
+  instances:
+    userReg:
+      limitForPeriod: 2
+      limitRefreshPeriod: 1s
+      timeoutDuration: 1s
+

@@ -1,6 +1,9 @@
 package tech.mlsql.serviceframework.platform.action
 
+import io.github.resilience4j.ratelimiter.RateLimiter
+import io.vavr.CheckedFunction0
 import tech.mlsql.serviceframework.platform.AppRuntimeStore
+import tech.mlsql.serviceframework.platform.resilience.RateLimiterFactory
 
 /**
  * 19/1/2020 WilliamZhu(allwefantasy@gmail.com)
@@ -15,7 +18,19 @@ object ActionManager {
     AppRuntimeStore.store.getAction(action) match {
       case Some(item) =>
         val actionClassName = item.className
-        item.loader.loader.loadClass(actionClassName).newInstance().asInstanceOf[CustomAction].run(params)
+        val currentAction = item.loader.loader.loadClass(actionClassName).newInstance().asInstanceOf[CustomAction]
+
+        if (RateLimiterFactory.ActionRateLimiterMapping.containsKey(action)) {
+          val rateLimiter = RateLimiterFactory.ActionRateLimiterMapping.get(action)
+          val flightsSupplier = RateLimiter.decorateCheckedSupplier(rateLimiter, new CheckedFunction0[String] {
+            override def apply(): String = {
+              currentAction.run(params)
+            }
+          })
+          flightsSupplier.apply()
+        } else {
+          currentAction.run(params)
+        }
       case None => throw new RuntimeException(s"No action named ${action}")
     }
   }

@@ -92,6 +92,13 @@
     </profiles>
 
     <dependencies>
+
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-ratelimiter</artifactId>
+            <version>1.7.1</version>
+        </dependency>
+
         <dependency>
             <groupId>tech.mlsql</groupId>
             <artifactId>common-utils_${scala.binary.version}</artifactId>
