@@ -31,6 +31,7 @@ object RateLimiterFactory {
         .timeoutDuration(Duration.ofSeconds(JavaUtils.timeStringAsSec(timeoutDuration)))
         .build()
       val registry = RateLimiterRegistry.of(config)
+
       (item._1, registry)
     }.toMap
   }

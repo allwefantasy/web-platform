@@ -22,12 +22,12 @@ object ActionManager {
 
         if (RateLimiterFactory.ActionRateLimiterMapping.containsKey(action)) {
           val rateLimiter = RateLimiterFactory.ActionRateLimiterMapping.get(action)
-          val flightsSupplier = RateLimiter.decorateCheckedSupplier(rateLimiter, new CheckedFunction0[String] {
+          val supplier = RateLimiter.decorateCheckedSupplier(rateLimiter, new CheckedFunction0[String] {
             override def apply(): String = {
               currentAction.run(params)
             }
           })
-          flightsSupplier.apply()
+          supplier.apply()
         } else {
           currentAction.run(params)
         }
