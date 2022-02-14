@@ -1,14 +1,14 @@
 package tech.mlsql.serviceframework.platform.runtime
 
-import java.io.File
-
 import net.csdn.ServiceFramwork
 import net.csdn.bootstrap.Application
 import tech.mlsql.common.utils.classloader.ClassLoaderTool
 import tech.mlsql.common.utils.shell.command.ParamsUtil
 import tech.mlsql.serviceframework.platform._
 import tech.mlsql.serviceframework.platform.app.{AfterHTTPPhase, AppManager, BeforeHTTPPhase}
+import tech.mlsql.serviceframework.platform.plugin.RateLimiterAppPluginDesc
 
+import java.io.File
 import scala.collection.JavaConverters._
 
 /**
@@ -16,6 +16,7 @@ import scala.collection.JavaConverters._
  */
 object BuildInAppRuntime {
   def main(args: Array[String], plugins: List[Plugin]): Unit = {
+    val ALL_PLUGINS = defaultPlugin ++ plugins
     val params = new ParamsUtil(args)
 
     val applicationYamlName = params.getParam("config", "application.yml")
@@ -30,7 +31,7 @@ object BuildInAppRuntime {
     ServiceFramwork.applicaionYamlName(applicationYamlName)
     ServiceFramwork.scanService.setLoader(classOf[BuildInAppRuntime])
     ServiceFramwork.enableNoThreadJoin()
-    load(plugins)
+    load(ALL_PLUGINS)
     loadPlugin(params)
 
     AppRuntimeStore.store.getApps().filter(_.phase.head == BeforeHTTPPhase).foreach { appItem =>
@@ -44,6 +45,10 @@ object BuildInAppRuntime {
     }
     Thread.currentThread().join()
 
+  }
+
+  def defaultPlugin = {
+    List(new RateLimiterAppPluginDesc())
   }
 
   def load(plugins: List[Plugin]) = {
