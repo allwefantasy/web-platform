@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>tech.mlsql.serviceframework.baseweb</groupId>
     <artifactId>web-platform_{{scala_binary_version}}</artifactId>
-    <version>0.2.2</version>
+    <version>0.2.3</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
